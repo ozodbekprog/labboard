@@ -30,11 +30,11 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-8">
-      <Link href="/groups" className="text-xs text-slate-500 hover:text-slate-300">
+      <Link href="/groups" className="text-xs text-slate-400 hover:text-slate-700">
         ← Guruhlar
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-100">{group.name}</h1>
-      {group.description && <p className="mt-1 text-sm text-slate-400">{group.description}</p>}
+      <h1 className="mt-2 text-2xl font-semibold text-slate-900">{group.name}</h1>
+      {group.description && <p className="mt-1 text-sm text-slate-500">{group.description}</p>}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section>
@@ -50,7 +50,7 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
           </form>
           <div className="flex flex-col gap-2">
             {members.length === 0 && (
-              <div className="card p-5 text-sm text-slate-400">Hozircha talaba yo&apos;q. Email orqali qo&apos;shing.</div>
+              <div className="card p-5 text-sm text-slate-500">Hozircha talaba yo&apos;q. Email orqali qo&apos;shing.</div>
             )}
             {members.map(({ user: m }) => (
               <div key={m.id} className="card flex items-center gap-3 px-4 py-2.5">
@@ -61,8 +61,8 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
                   {initials(m.name)}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm text-slate-200">{m.name}</div>
-                  <div className="truncate text-xs text-slate-500">{m.email}</div>
+                  <div className="truncate text-sm text-slate-800">{m.name}</div>
+                  <div className="truncate text-xs text-slate-400">{m.email}</div>
                 </div>
               </div>
             ))}
@@ -75,7 +75,7 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
             <input type="hidden" name="groupId" value={group.id} />
             <input name="name" placeholder="Yangi xona nomi" className="input px-3 py-2 text-sm" required />
             <div className="flex gap-2">
-              <select name="subject" className="input flex-1 px-3 py-2 text-sm text-slate-200">
+              <select name="subject" className="input flex-1 px-3 py-2 text-sm text-slate-800">
                 {SUBJECTS.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.label}
@@ -88,11 +88,11 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
             </div>
           </form>
           <div className="flex flex-col gap-2">
-            {groupRooms.length === 0 && <div className="card p-5 text-sm text-slate-400">Guruhga bog&apos;langan xona yo&apos;q.</div>}
+            {groupRooms.length === 0 && <div className="card p-5 text-sm text-slate-500">Guruhga bog&apos;langan xona yo&apos;q.</div>}
             {groupRooms.map((room) => (
               <Link key={room.id} href={`/room/${room.id}`} className="card card-hover flex items-center gap-3 px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: subjectColor(room.subject) }} />
-                <span className="text-sm text-slate-200">{room.name}</span>
+                <span className="text-sm text-slate-800">{room.name}</span>
                 <span className="ml-auto text-xs text-slate-500">{subjectLabel(room.subject)}</span>
               </Link>
             ))}

@@ -10,22 +10,22 @@ export function SignInForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100">Xush kelibsiz!</h1>
-        <p className="mt-1 text-sm text-slate-400">Akkauntingizga kiring</p>
+        <h1 className="text-xl font-semibold text-slate-900">Xush kelibsiz!</h1>
+        <p className="mt-1 text-sm text-slate-600">Akkauntingizga kiring</p>
       </div>
 
       {state?.error && (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
           {state.error}
         </div>
       )}
 
-      <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+      <label className="flex flex-col gap-1.5 text-sm text-slate-700">
         Email
         <input name="email" type="email" required placeholder="siz@email.uz" className="input px-3 py-2.5" />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+      <label className="flex flex-col gap-1.5 text-sm text-slate-700">
         Parol
         <input name="password" type="password" required placeholder="••••••••" className="input px-3 py-2.5" />
       </label>
@@ -38,9 +38,9 @@ export function SignInForm() {
         {pending ? "Kirilmoqda…" : "Kirish"}
       </button>
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-sm text-slate-500">
         Akkauntingiz yo&apos;qmi?{" "}
-        <Link href="/sign-up" className="text-indigo-400 hover:underline">
+        <Link href="/sign-up" className="text-emerald-600 hover:underline">
           Ro&apos;yxatdan o&apos;tish
         </Link>
       </p>

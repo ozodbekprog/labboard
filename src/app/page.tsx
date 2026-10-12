@@ -40,13 +40,13 @@ export default function LandingPage() {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
       <header className="flex items-center justify-between py-5">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 text-lg font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-lg font-bold text-white">
             L
           </div>
-          <span className="text-lg font-semibold text-slate-100">LabBoard</span>
+          <span className="text-lg font-semibold text-slate-900">LabBoard</span>
         </div>
         <nav className="flex items-center gap-3 text-sm">
-          <Link href="/sign-in" className="rounded-lg px-4 py-2 text-slate-300 hover:bg-white/10">
+          <Link href="/sign-in" className="rounded-lg px-4 py-2 text-slate-600 hover:bg-slate-100">
             Kirish
           </Link>
           <Link href="/sign-up" className="btn-primary rounded-lg px-4 py-2 font-medium text-white">
@@ -56,13 +56,13 @@ export default function LandingPage() {
       </header>
 
       <section className="flex flex-col items-center py-20 text-center">
-        <div className="glass mb-6 rounded-full px-4 py-1.5 text-xs text-slate-300">
+        <div className="glass mb-6 rounded-full px-4 py-1.5 text-xs text-slate-600">
           Universitetlar uchun yangi avlod platformasi
         </div>
-        <h1 className="max-w-3xl text-5xl font-bold leading-tight tracking-tight text-slate-50 md:text-6xl">
+        <h1 className="max-w-3xl text-5xl font-bold leading-tight tracking-tight text-slate-900 md:text-6xl">
           Doska emas — <span className="gradient-text">laboratoriya</span>
         </h1>
-        <p className="mt-6 max-w-2xl text-lg text-slate-400">
+        <p className="mt-6 max-w-2xl text-lg text-slate-600">
           Tarixdan tortib matematika, fizika, kimyo va coding gacha — barcha fanlar uchun real vaqtda
           ishlaydigan interaktiv simulyatsiyalar, jonli video darslar va AI yordamchi bir platformada.
         </p>
@@ -70,13 +70,13 @@ export default function LandingPage() {
           <Link href="/sign-up" className="btn-primary rounded-xl px-6 py-3 font-medium text-white">
             Bepul boshlash
           </Link>
-          <Link href="/sign-in" className="glass rounded-xl px-6 py-3 text-slate-200 hover:bg-white/10">
+          <Link href="/sign-in" className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 hover:bg-slate-50">
             Demo akkaunt bilan kirish
           </Link>
         </div>
-        <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs text-slate-400">
+        <div className="mt-10 flex flex-wrap justify-center gap-2 text-xs text-slate-600">
           {SUBJECTS.map((s) => (
-            <span key={s} className="glass rounded-full px-3 py-1">
+            <span key={s} className="bg-white border border-slate-200 rounded-full px-3 py-1">
               {s}
             </span>
           ))}
@@ -87,13 +87,13 @@ export default function LandingPage() {
         {FEATURES.map((f) => (
           <div key={f.title} className="card card-hover p-5">
             <div className="text-2xl">{f.icon}</div>
-            <h3 className="mt-3 font-semibold text-slate-100">{f.title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{f.text}</p>
+            <h3 className="mt-3 font-semibold text-slate-900">{f.title}</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{f.text}</p>
           </div>
         ))}
       </section>
 
-      <footer className="flex items-center justify-between border-t border-white/10 py-6 text-xs text-slate-500">
+      <footer className="flex items-center justify-between border-t border-slate-200 py-6 text-xs text-slate-500">
         <span>© {new Date().getFullYear()} LabBoard</span>
         <span>O&apos;zbekiston uchun qurilmoqda 🇺🇿</span>
       </footer>

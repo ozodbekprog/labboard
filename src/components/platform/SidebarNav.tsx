@@ -22,7 +22,7 @@ export function SidebarNav() {
             key={item.href}
             href={item.href}
             className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-              active ? "bg-indigo-500/20 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+              active ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             }`}
           >
             <Icon size={17} />

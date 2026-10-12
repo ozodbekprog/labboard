@@ -50,12 +50,12 @@ export default function MathGrapher() {
     const toPy = (y: number) => h / 2 - (y - cy) * scale;
 
     // fon
-    ctx.fillStyle = "#0a0f1c";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, w, h);
 
     // grid
     const step = niceStep(scale);
-    ctx.strokeStyle = "rgba(148,163,184,0.12)";
+    ctx.strokeStyle = "rgba(15,23,42,0.08)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (let x = Math.ceil((cx - w / 2 / scale) / step) * step; x <= cx + w / 2 / scale; x += step) {
@@ -71,7 +71,7 @@ export default function MathGrapher() {
     ctx.stroke();
 
     // o'qlar
-    ctx.strokeStyle = "rgba(148,163,184,0.5)";
+    ctx.strokeStyle = "rgba(15,23,42,0.45)";
     ctx.beginPath();
     ctx.moveTo(0, toPy(0));
     ctx.lineTo(w, toPy(0));
@@ -80,7 +80,7 @@ export default function MathGrapher() {
     ctx.stroke();
 
     // belgilar
-    ctx.fillStyle = "rgba(148,163,184,0.75)";
+    ctx.fillStyle = "#64748b";
     ctx.font = "10px var(--font-geist-mono), monospace";
     for (let x = Math.ceil((cx - w / 2 / scale) / step) * step; x <= cx + w / 2 / scale; x += step) {
       if (Math.abs(x) < step / 2) continue;
@@ -149,7 +149,7 @@ export default function MathGrapher() {
 
     // hover kursor
     if (hover) {
-      ctx.strokeStyle = "rgba(226,232,240,0.35)";
+      ctx.strokeStyle = "rgba(15,23,42,0.3)";
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.moveTo(toPx(hover.x), 0);
@@ -231,18 +231,18 @@ export default function MathGrapher() {
             <button
               key={p}
               onClick={() => setInputs((prev) => [p, prev[1]])}
-              className="rounded-md border border-slate-600/40 px-1.5 py-0.5 font-mono text-slate-300 hover:bg-white/10"
+              className="rounded-md border border-slate-200 px-1.5 py-0.5 font-mono text-slate-600 hover:bg-slate-100"
             >
               {p}
             </button>
           ))}
-          <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-slate-300">
+          <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-slate-600">
             <input type="checkbox" checked={showDeriv} onChange={(e) => setShowDeriv(e.target.checked)} />
             hosila f&apos;(x)
           </label>
           <button
             onClick={() => setView({ cx: 0, cy: 0, scale: 40 })}
-            className="rounded-md border border-slate-600/40 px-1.5 py-0.5 text-slate-300 hover:bg-white/10"
+            className="rounded-md border border-slate-200 px-1.5 py-0.5 text-slate-600 hover:bg-slate-100"
           >
             reset
           </button>
@@ -256,7 +256,7 @@ export default function MathGrapher() {
             ),
         )}
       </div>
-      <div ref={wrapRef} className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-700/40">
+      <div ref={wrapRef} className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white">
         <canvas
           ref={canvasRef}
           onWheel={onWheel}
@@ -267,7 +267,7 @@ export default function MathGrapher() {
           className="block cursor-crosshair"
         />
         {hover && (
-          <div className="pointer-events-none absolute right-2 top-2 rounded-md bg-black/60 px-2 py-1 font-mono text-[10px] text-slate-200">
+          <div className="pointer-events-none absolute right-2 top-2 rounded-md border border-slate-200 bg-white/95 px-2 py-1 font-mono text-[10px] text-slate-700 shadow-sm">
             x = {hover.x.toFixed(3)}
             {series
               .filter((s) => s.fn)
@@ -282,7 +282,7 @@ export default function MathGrapher() {
           </div>
         )}
       </div>
-      <div className="px-1 text-[10px] text-slate-500">
+      <div className="px-1 text-[10px] text-slate-400">
         G&apos;ildirak — zoom · sichqonchani tortish — surish · yuqorida ifoda yozing (masalan: x^2, sin(x), 2x+1, ln(x))
       </div>
     </div>

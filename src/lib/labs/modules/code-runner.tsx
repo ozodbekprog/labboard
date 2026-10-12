@@ -79,7 +79,7 @@ export default function CodeRunner() {
           <button
             key={k}
             onClick={() => setCode(STARTERS[k])}
-            className="rounded-md border border-slate-600/40 px-1.5 py-0.5 text-[10px] text-slate-300 hover:bg-white/10"
+            className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-600 hover:bg-slate-100"
           >
             {k}
           </button>
@@ -100,12 +100,12 @@ export default function CodeRunner() {
         className="input h-40 resize-none p-2 font-mono text-xs leading-relaxed"
       />
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-slate-700/40 bg-black/40 p-2 font-mono text-[11px]">
+      <div className="min-h-0 flex-1 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-2 font-mono text-[11px]">
         {logs.length === 0 && <div className="text-slate-500">Natija…</div>}
         {logs.map((l, i) => (
           <div
             key={i}
-            className={l.kind === "error" ? "text-rose-400" : l.kind === "info" ? "text-slate-500" : "text-emerald-300"}
+            className={l.kind === "error" ? "text-rose-600" : l.kind === "info" ? "text-slate-500" : "text-emerald-700"}
           >
             {l.kind === "log" ? "› " : ""}
             {l.text}
@@ -114,7 +114,7 @@ export default function CodeRunner() {
       </div>
 
       <iframe ref={iframeRef} sandbox="allow-scripts" className="hidden" title="code-sandbox" />
-      <div className="px-1 text-[10px] text-slate-500">
+      <div className="px-1 text-[10px] text-slate-400">
         JavaScript sandbox (iframes izolyatsiyasi). Tez orada: Python (Pyodide), C++ va SQL runnerlari.
       </div>
     </div>

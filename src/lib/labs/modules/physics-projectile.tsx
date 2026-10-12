@@ -113,14 +113,14 @@ export default function PhysicsProjectile() {
       const sy = (y: number) => h - marginB - (y / maxY) * plotH;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#0a0f1c";
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, w, h);
 
       // grid + masshtab
       const stepX = niceStep(maxX, 8);
       const stepY = niceStep(maxY, 5);
-      ctx.strokeStyle = "rgba(148,163,184,0.1)";
-      ctx.fillStyle = "rgba(148,163,184,0.6)";
+      ctx.strokeStyle = "rgba(15,23,42,0.07)";
+      ctx.fillStyle = "#64748b";
       ctx.font = "10px var(--font-geist-mono), monospace";
       ctx.beginPath();
       for (let x = stepX; x <= maxX; x += stepX) {
@@ -136,7 +136,7 @@ export default function PhysicsProjectile() {
       ctx.stroke();
 
       // yer chizig'i
-      ctx.strokeStyle = "rgba(148,163,184,0.6)";
+      ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(marginL, sy(0));
@@ -145,7 +145,7 @@ export default function PhysicsProjectile() {
 
       // eski izlar (ghost)
       for (const gh of st.ghosts) {
-        ctx.strokeStyle = "rgba(148,163,184,0.22)";
+        ctx.strokeStyle = "rgba(148,163,184,0.4)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         gh.pts.forEach((p, i) => (i === 0 ? ctx.moveTo(sx(p.x), sy(p.y)) : ctx.lineTo(sx(p.x), sy(p.y))));
@@ -203,12 +203,12 @@ export default function PhysicsProjectile() {
 
   return (
     <div className="flex h-full flex-col gap-2">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-1 text-[11px] text-slate-300">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-1 text-[11px] text-slate-600">
         <Slider label={`v₀ = ${v0} m/s`} min={5} max={80} value={v0} onChange={setV0} />
         <Slider label={`burchak = ${angle}°`} min={5} max={85} value={angle} onChange={setAngle} />
         <Slider label={`havo qarshiligi k = ${drag.toFixed(3)}`} min={0} max={0.05} step={0.001} value={drag} onChange={setDrag} />
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">Sayyora:</span>
+          <span className="text-slate-500">Sayyora:</span>
           <select
             value={planet}
             onChange={(e) => setPlanet(e.target.value as typeof planet)}
@@ -228,12 +228,12 @@ export default function PhysicsProjectile() {
           {running && (
             <button
               onClick={() => setRunning(false)}
-              className="rounded-lg border border-slate-600/50 px-3 py-1.5 text-xs hover:bg-white/10"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
             >
               Pauza
             </button>
           )}
-          <div className="ml-auto flex gap-3 font-mono text-[10px] text-slate-400">
+          <div className="ml-auto flex gap-3 font-mono text-[10px] text-slate-500">
             <span>t = {readout.t.toFixed(2)} s</span>
             <span>x = {readout.x.toFixed(1)} m</span>
             <span>y = {readout.y.toFixed(1)} m</span>
@@ -241,7 +241,7 @@ export default function PhysicsProjectile() {
           </div>
         </div>
       </div>
-      <div ref={wrapRef} className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-700/40">
+      <div ref={wrapRef} className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white">
         <canvas ref={canvasRef} className="block" />
       </div>
     </div>
@@ -258,7 +258,7 @@ function Slider(props: {
 }) {
   return (
     <label className="flex flex-col gap-0.5">
-      <span className="text-slate-400">{props.label}</span>
+      <span className="text-slate-500">{props.label}</span>
       <input
         type="range"
         min={props.min}

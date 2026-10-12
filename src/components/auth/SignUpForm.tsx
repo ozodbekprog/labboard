@@ -11,12 +11,12 @@ export function SignUpForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-slate-100">Ro&apos;yxatdan o&apos;tish</h1>
-        <p className="mt-1 text-sm text-slate-400">Bir daqiqada boshlang</p>
+        <h1 className="text-xl font-semibold text-slate-900">Ro&apos;yxatdan o&apos;tish</h1>
+        <p className="mt-1 text-sm text-slate-600">Bir daqiqada boshlang</p>
       </div>
 
       {state?.error && (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
           {state.error}
         </div>
       )}
@@ -34,8 +34,8 @@ export function SignUpForm() {
             onClick={() => setRole(r.id)}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition ${
               role === r.id
-                ? "border-indigo-400 bg-indigo-500/20 text-white"
-                : "border-slate-600/40 text-slate-400 hover:bg-white/5"
+                ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                : "border-slate-300 text-slate-500 hover:bg-slate-50"
             }`}
           >
             <span>{r.icon}</span> {r.label}
@@ -44,17 +44,17 @@ export function SignUpForm() {
         <input type="hidden" name="role" value={role} />
       </fieldset>
 
-      <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+      <label className="flex flex-col gap-1.5 text-sm text-slate-700">
         Ism familiya
         <input name="name" required placeholder="Aziz Karimov" className="input px-3 py-2.5" />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+      <label className="flex flex-col gap-1.5 text-sm text-slate-700">
         Email
         <input name="email" type="email" required placeholder="siz@email.uz" className="input px-3 py-2.5" />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+      <label className="flex flex-col gap-1.5 text-sm text-slate-700">
         Parol
         <input name="password" type="password" required placeholder="Kamida 8 belgi, harf va raqam" className="input px-3 py-2.5" />
       </label>
@@ -67,9 +67,9 @@ export function SignUpForm() {
         {pending ? "Yaratilmoqda…" : "Akkaunt yaratish"}
       </button>
 
-      <p className="text-center text-sm text-slate-400">
+      <p className="text-center text-sm text-slate-500">
         Akkauntingiz bormi?{" "}
-        <Link href="/sign-in" className="text-indigo-400 hover:underline">
+        <Link href="/sign-in" className="text-emerald-600 hover:underline">
           Kirish
         </Link>
       </p>

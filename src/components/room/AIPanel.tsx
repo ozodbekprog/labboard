@@ -103,12 +103,12 @@ export default function AIPanel({ roomName, subject }: { roomName: string; subje
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex items-center gap-2 px-1">
-        <h2 className="text-sm font-semibold text-slate-100">AI yordamchisi</h2>
+        <h2 className="text-sm font-semibold text-slate-800">AI yordamchisi</h2>
         <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[10px] text-cyan-300">{subject}</span>
       </div>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-1">
         {messages.length === 0 && (
-          <div className="mt-4 text-center text-xs text-slate-500">
+          <div className="mt-4 text-center text-xs text-slate-400">
             Savol yozing — dars materiali bo'yicha yordam oling
           </div>
         )}
@@ -117,8 +117,8 @@ export default function AIPanel({ roomName, subject }: { roomName: string; subje
             key={i}
             className={`rounded-xl p-2 text-sm whitespace-pre-wrap ${
               m.role === "user"
-                ? "ml-4 bg-indigo-500/15 text-slate-100"
-                : "card text-slate-200"
+                ? "ml-4 bg-indigo-500/15 text-slate-900 font-medium"
+                : "card text-slate-700"
             }`}
           >
             {m.content || (m.role === "assistant" ? "…" : "")}
@@ -126,12 +126,12 @@ export default function AIPanel({ roomName, subject }: { roomName: string; subje
         ))}
       </div>
       {warning && (
-        <div className="card border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
           {warning}
         </div>
       )}
       {error && (
-        <div className="card border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">
           {error}
         </div>
       )}
@@ -140,7 +140,7 @@ export default function AIPanel({ roomName, subject }: { roomName: string; subje
           <button
             key={c}
             onClick={() => setInput(c)}
-            className="rounded-md border border-slate-600/40 px-2 py-1 text-[11px] text-slate-300 hover:bg-white/10"
+            className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-600 hover:bg-slate-100"
           >
             {c}
           </button>

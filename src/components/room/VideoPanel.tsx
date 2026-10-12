@@ -65,11 +65,11 @@ export default function VideoPanel({ roomId, userName }: { roomId: string; userN
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex items-center gap-2 px-1">
-        <h2 className="text-sm font-semibold text-slate-100">Video dars</h2>
+        <h2 className="text-sm font-semibold text-slate-800">Video dars</h2>
         {status === "joined" && (
           <button
             onClick={disconnect}
-            className="ml-auto rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-300 hover:bg-rose-500/20"
+            className="ml-auto rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
           >
             Ajratish
           </button>
@@ -84,17 +84,17 @@ export default function VideoPanel({ roomId, userName }: { roomId: string; userN
           </div>
         )}
         {status === "connecting" && (
-          <div className="flex h-full min-h-[420px] items-center justify-center text-sm text-slate-400">
+          <div className="flex h-full min-h-[420px] items-center justify-center text-sm text-slate-500">
             Ulanmoqda…
           </div>
         )}
         {notConfigured && (
-          <div className="card border-amber-500/40 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-300">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
             Video xizmat sozlanmagan — .env.local da LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET to'ldiring.
           </div>
         )}
         {status === "error" && (
-          <div className="card border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300">
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-xs text-rose-600">
             <p className="mb-2">{error}</p>
             <button onClick={() => void join()} className="btn-primary rounded-lg px-3 py-1.5 text-xs text-white">
               Qayta urinish

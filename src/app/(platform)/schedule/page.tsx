@@ -69,13 +69,13 @@ export default async function SchedulePage() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-6 py-8">
-      <h1 className="text-2xl font-semibold text-slate-100">Dars jadvali</h1>
-      <p className="mt-1 text-sm text-slate-400">Haftalik mashg&apos;ulotlar jadvali</p>
+      <h1 className="text-2xl font-semibold text-slate-900">Dars jadvali</h1>
+      <p className="mt-1 text-sm text-slate-500">Haftalik mashg&apos;ulotlar jadvali</p>
 
       {myRooms.length === 0 ? (
-        <div className="card mt-6 p-8 text-center text-sm text-slate-400">
+        <div className="card mt-6 p-8 text-center text-sm text-slate-500">
           Avval xona oching —{" "}
-          <Link href="/dashboard" className="text-indigo-400 hover:underline">
+          <Link href="/dashboard" className="text-emerald-600 hover:underline">
             Dashboardga o&apos;tish
           </Link>
         </div>
@@ -84,7 +84,7 @@ export default async function SchedulePage() {
           action={createLessonAction}
           className="card mt-6 grid gap-3 p-4 md:grid-cols-[200px_1fr_150px_110px_110px_auto]"
         >
-          <select name="roomId" className="input px-3 py-2.5 text-slate-200" required>
+          <select name="roomId" className="input px-3 py-2.5 text-slate-800" required>
             <option value="">Xona tanlang</option>
             {myRooms.map((room) => (
               <option key={room.id} value={room.id}>
@@ -95,7 +95,7 @@ export default async function SchedulePage() {
           <input name="title" placeholder="Dars mavzusi" className="input px-3 py-2.5" required />
           <input name="date" type="date" defaultValue={dateInput} className="input px-3 py-2.5" />
           <input name="time" type="time" defaultValue="09:00" className="input px-3 py-2.5" />
-          <select name="duration" className="input px-3 py-2.5 text-slate-200" defaultValue="60">
+          <select name="duration" className="input px-3 py-2.5 text-slate-800" defaultValue="60">
             <option value="30">30 daq</option>
             <option value="45">45 daq</option>
             <option value="60">60 daq</option>
@@ -120,21 +120,21 @@ export default async function SchedulePage() {
           return (
             <div
               key={i}
-              className={`card min-h-40 p-3${isToday ? " border-indigo-400/60" : ""}`}
+              className={`card min-h-40 p-3${isToday ? " border-emerald-400" : ""}`}
             >
               <div className="text-xs text-slate-400">
                 {date.toLocaleDateString("uz-UZ", { weekday: "short", day: "numeric", month: "short" })}
               </div>
               {items.length === 0 ? (
-                <div className="mt-2 text-slate-600">—</div>
+                <div className="mt-2 text-slate-300">—</div>
               ) : (
                 items.map((l) => (
                   <Link
                     key={l.id}
                     href={`/room/${l.roomId}`}
-                    className="block rounded-lg border border-white/10 bg-white/5 p-2 mt-2 hover:bg-white/10"
+                    className="block rounded-lg border border-slate-200 bg-white p-2 mt-2 hover:bg-slate-50"
                   >
-                    <div className="text-xs font-medium text-slate-100">{l.title}</div>
+                    <div className="text-xs font-medium text-slate-900">{l.title}</div>
                     <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500">
                       <span
                         className="h-1.5 w-1.5 shrink-0 rounded-full"
@@ -142,7 +142,7 @@ export default async function SchedulePage() {
                       />
                       {l.roomName}
                     </div>
-                    <div className="mt-0.5 font-mono text-[10px] text-indigo-300">
+                    <div className="mt-0.5 font-mono text-[10px] text-emerald-600">
                       {formatTime(l.startsAt)}–{formatTime(l.endsAt)}
                     </div>
                   </Link>

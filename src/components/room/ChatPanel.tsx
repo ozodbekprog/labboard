@@ -78,17 +78,17 @@ export default function ChatPanel({ roomId, user }: { roomId: string; user: { id
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="flex items-center gap-2 px-1">
-        <h2 className="text-sm font-semibold text-slate-100">Chat</h2>
-        <span className="ml-auto text-[10px] text-slate-500">{user.name}</span>
+        <h2 className="text-sm font-semibold text-slate-800">Chat</h2>
+        <span className="ml-auto text-[10px] text-slate-400">{user.name}</span>
       </div>
       <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-1">
         {messages.length === 0 && (
-          <div className="mt-4 text-center text-xs text-slate-500">Hozircha xabar yo'q — birinch bo'ling</div>
+          <div className="mt-4 text-center text-xs text-slate-400">Hozircha xabar yo'q — birinch bo'ling</div>
         )}
         {messages.map((m) => {
           const own = m.user.id === user.id;
           return (
-            <div key={m.id} className={`flex gap-2 ${own ? "rounded-xl bg-indigo-500/10 p-2" : ""}`}>
+            <div key={m.id} className={`flex gap-2 ${own ? "rounded-xl bg-emerald-50 p-2" : ""}`}>
               <span
                 className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
                 style={{ background: colorFor(m.user.name) }}
@@ -97,12 +97,12 @@ export default function ChatPanel({ roomId, user }: { roomId: string; user: { id
               </span>
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-medium text-slate-300">{m.user.name}</span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-xs font-medium text-slate-700">{m.user.name}</span>
+                  <span className="text-[10px] text-slate-400">
                     {new Date(m.createdAt).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
-                <div className="break-words text-sm text-slate-200">{m.body}</div>
+                <div className="break-words text-sm text-slate-700">{m.body}</div>
               </div>
             </div>
           );

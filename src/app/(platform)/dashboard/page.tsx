@@ -31,27 +31,27 @@ export default async function DashboardPage() {
     <main className="mx-auto w-full max-w-5xl px-6 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-100">Salom, {user.name.split(" ")[0]} 👋</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-2xl font-semibold text-slate-900">Salom, {user.name.split(" ")[0]} 👋</h1>
+          <p className="mt-1 text-sm text-slate-500">
             {myRooms.length} xona · {myGroups.length} guruh · {upcoming.length} rejalashtirilgan dars
           </p>
         </div>
       </div>
 
       <details className="card mt-6 overflow-hidden">
-        <summary className="cursor-pointer select-none px-5 py-4 text-sm font-medium text-slate-200">
+        <summary className="cursor-pointer select-none px-5 py-4 text-sm font-medium text-slate-800">
           + Yangi dars xonasi ochish
         </summary>
-        <form action={createRoomAction} className="grid gap-3 border-t border-white/10 px-5 py-4 md:grid-cols-[1fr_180px_200px_auto]">
+        <form action={createRoomAction} className="grid gap-3 border-t border-slate-200 px-5 py-4 md:grid-cols-[1fr_180px_200px_auto]">
           <input name="name" placeholder="Xona nomi (masalan: Fizika — 101-guruh)" className="input px-3 py-2.5" required />
-          <select name="subject" className="input px-3 py-2.5 text-slate-200">
+          <select name="subject" className="input px-3 py-2.5 text-slate-800">
             {SUBJECTS.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
               </option>
             ))}
           </select>
-          <select name="groupId" className="input px-3 py-2.5 text-slate-200">
+          <select name="groupId" className="input px-3 py-2.5 text-slate-800">
             <option value="">Guruhsiz</option>
             {myGroups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -66,9 +66,9 @@ export default async function DashboardPage() {
       </details>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500">Xonalarim</h2>
+        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-400">Xonalarim</h2>
         {myRooms.length === 0 ? (
-          <div className="card p-8 text-center text-sm text-slate-400">
+          <div className="card p-8 text-center text-sm text-slate-500">
             Hozircha xona yo&apos;q. Yuqoridagi tugma bilan birinchi dars xonangizni oching — doska, simulyatsiyalar va video
             darhol tayyor bo&apos;ladi.
           </div>
@@ -78,10 +78,10 @@ export default async function DashboardPage() {
               <Link key={room.id} href={`/room/${room.id}`} className="card card-hover block p-5">
                 <div className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: subjectColor(room.subject) }} />
-                  <span className="text-xs text-slate-400">{subjectLabel(room.subject)}</span>
+                  <span className="text-xs text-slate-500">{subjectLabel(room.subject)}</span>
                 </div>
-                <div className="mt-2 font-medium text-slate-100">{room.name}</div>
-                <div className="mt-3 text-xs text-indigo-400">Xonaga kirish →</div>
+                <div className="mt-2 font-medium text-slate-900">{room.name}</div>
+                <div className="mt-3 text-xs text-emerald-600">Xonaga kirish →</div>
               </Link>
             ))}
           </div>
@@ -90,15 +90,15 @@ export default async function DashboardPage() {
 
       <section className="mt-10">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">Yaqin darslar</h2>
-          <Link href="/schedule" className="text-xs text-indigo-400 hover:underline">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">Yaqin darslar</h2>
+          <Link href="/schedule" className="text-xs text-emerald-600 hover:underline">
             Jadvalni ochish →
           </Link>
         </div>
         {upcoming.length === 0 ? (
-          <div className="card p-6 text-sm text-slate-400">
+          <div className="card p-6 text-sm text-slate-500">
             Rejalashtirilgan darslar yo&apos;q.{" "}
-            <Link href="/schedule" className="text-indigo-400 hover:underline">
+            <Link href="/schedule" className="text-emerald-600 hover:underline">
               Jadvalda dars qo&apos;shing
             </Link>
             .
@@ -112,10 +112,10 @@ export default async function DashboardPage() {
                 className="card card-hover flex items-center justify-between px-5 py-3.5"
               >
                 <div>
-                  <div className="text-sm font-medium text-slate-100">{lesson.title}</div>
+                  <div className="text-sm font-medium text-slate-900">{lesson.title}</div>
                   <div className="text-xs text-slate-500">{room.name}</div>
                 </div>
-                <div className="font-mono text-xs text-slate-400">{formatLessonRange(lesson.startsAt, lesson.endsAt)}</div>
+                <div className="font-mono text-xs text-slate-500">{formatLessonRange(lesson.startsAt, lesson.endsAt)}</div>
               </Link>
             ))}
           </div>

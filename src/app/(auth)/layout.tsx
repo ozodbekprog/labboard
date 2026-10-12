@@ -6,10 +6,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
     <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-10">
       <div className="w-full max-w-md">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 text-xl font-bold text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xl font-bold text-white">
             L
           </div>
-          <span className="text-xl font-semibold text-slate-100">LabBoard</span>
+          <span className="text-xl font-semibold text-slate-900">LabBoard</span>
         </Link>
         <div className="card p-6">{children}</div>
       </div>
