@@ -3,25 +3,60 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently -k -n next,sync -c blue,green \"next dev\" \"tsx server/sync.ts\"",
+    "dev:next": "next dev",
+    "dev:sync": "tsx server/sync.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "drizzle-kit push",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.24",
+    "@livekit/components-styles": "^1.2.0",
+    "@tldraw/sync": "^5.5.2",
+    "@tldraw/sync-core": "^5.5.2",
+    "better-sqlite3": "^13.0.3",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.4",
+    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.5.2",
+    "jose": "^6.2.12",
+    "livekit-client": "^2.22.4",
+    "livekit-server-sdk": "^2.19.1",
+    "lucide-react": "^1.55.0",
+    "nanoid": "^6.0.2",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "tailwind-merge": "^3.7.0",
+    "tldraw": "^5.5.2",
+    "ws": "^8.22.0",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.2",
+    "concurrently": "^10.0.6",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.11.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "sharp",
+      "@tailwindcss/oxide"
+    ]
+  }
 }

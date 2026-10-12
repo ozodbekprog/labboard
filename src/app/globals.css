@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-surface-0: #070b14;
+  --color-surface-1: #0c1220;
+  --color-surface-2: #121a2b;
+  --color-line: rgba(148, 163, 184, 0.14);
+  --color-accent: #6366f1;
+  --color-accent-2: #22d3ee;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #070b14;
+  --foreground: #e2e8f0;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(1000px 500px at 85% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
+    radial-gradient(800px 400px at 10% 110%, rgba(34, 211, 238, 0.1), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 16px;
+}
+
+.card-hover {
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.card-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #a5b4fc, #67e8f9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  transition: filter 140ms ease, transform 140ms ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.12);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.input:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(255, 255, 255, 0.07);
+}
+.input::placeholder {
+  color: rgba(148, 163, 184, 0.6);
 }
