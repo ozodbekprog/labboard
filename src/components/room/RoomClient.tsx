@@ -10,6 +10,7 @@ import type { Editor, TLAssetStore } from "tldraw";
 import { ArrowLeft, Copy, MessageSquare, ScanSearch, Sparkles, Users, Video, X, FlaskConical } from "lucide-react";
 import LabPanel, { type BoardEditor } from "./LabPanel";
 import BoardAIPanel from "./BoardAIPanel";
+import { useAutoAI } from "./useAutoAI";
 import type { BoardAnalysis } from "@/lib/ai/types";
 import ChatPanel from "./ChatPanel";
 import AIPanel from "./AIPanel";
@@ -41,8 +42,11 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
   const [boardAiLoading, setBoardAiLoading] = useState(false);
   const [boardAiAnalysis, setBoardAiAnalysis] = useState<BoardAnalysis | null>(null);
   const [boardAiError, setBoardAiError] = useState<string | null>(null);
+  const [autoAiOn, setAutoAiOn] = useState(true);
   const [invited, setInvited] = useState(false);
   const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { processing: autoAiBusy } = useAutoAI(editor, autoAiOn);
 
   useEffect(() => {
     return () => {
@@ -138,6 +142,12 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           </span>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-3">
+          {autoAiBusy && (
+            <span className="flex items-center gap-1 text-[11px] text-emerald-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              AI ishlayapti…
+            </span>
+          )}
           <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 sm:flex">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
             real-time
@@ -185,6 +195,14 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           >
             <ScanSearch size={14} />
             AI o'qish
+          </button>
+          <button
+            onClick={() => setAutoAiOn(v => !v)}
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm ${autoAiOn ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
+            title="Yoqilganda AI yangi yozuvlaringizni o'zi o'qib, natijani doskaga chizadi"
+          >
+            <Sparkles size={14} />
+            Avto-AI
           </button>
           {labPopover && (
             <div className="absolute left-0 top-12 z-[590] w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
