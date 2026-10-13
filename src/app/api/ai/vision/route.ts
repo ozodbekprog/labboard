@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/server/auth";
+import { getAiConfig } from "@/server/ai-config";
 import { VISION_SYSTEM_PROMPT, parseAnalysis } from "@/lib/ai/vision-prompt";
 
 const visionSchema = z.object({
@@ -22,18 +23,18 @@ export async function POST(request: Request) {
   }
 
   const { image, hint } = parsed.data;
-  const { AI_API_KEY, AI_BASE_URL, AI_MODEL } = process.env;
-  if (!AI_API_KEY || !AI_MODEL) {
+  const config = await getAiConfig(user.id);
+  if (!config) {
     return Response.json({ error: "ai_not_configured" }, { status: 501 });
   }
 
-  const base = (AI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const model = process.env.AI_VISION_MODEL || AI_MODEL;
+  const base = config.baseUrl.replace(/\/$/, "");
+  const model = config.visionModel;
 
   const res = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
-      authorization: `Bearer ${AI_API_KEY}`,
+      authorization: `Bearer ${config.key}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({

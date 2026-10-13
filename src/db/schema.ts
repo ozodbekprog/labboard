@@ -87,6 +87,17 @@ export const messages = sqliteTable("messages", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const settings = sqliteTable("settings", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  aiBaseUrl: text("ai_base_url"),
+  aiKey: text("ai_key"),
+  aiModel: text("ai_model"),
+  aiVisionModel: text("ai_vision_model"),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type Room = typeof rooms.$inferSelect;

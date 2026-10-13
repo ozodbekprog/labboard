@@ -4,21 +4,16 @@ import "tldraw/tldraw.css";
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSync } from "@tldraw/sync";
 import type { Editor, TLAssetStore } from "tldraw";
-import { ArrowLeft, Copy, MessageSquare, ScanSearch, Sparkles, Users, Video, X, FlaskConical } from "lucide-react";
-import LabPanel, { type BoardEditor } from "./LabPanel";
-import BoardAIPanel from "./BoardAIPanel";
+import { ArrowLeft, Copy, Settings } from "lucide-react";
+import { PresenceAvatars } from "./Presence";
+import AISettingsModal from "./AISettingsModal";
+import ShapePopup from "./ShapePopup";
 import { useAutoAI } from "./useAutoAI";
-import type { BoardAnalysis } from "@/lib/ai/types";
-import ChatPanel from "./ChatPanel";
-import AIPanel from "./AIPanel";
-import VideoPanel from "./VideoPanel";
-import { PresenceAvatars, PresenceList } from "./Presence";
-import LaTeXDialog from "./LaTeXDialog";
+import type { PopupSuggestion } from "@/lib/ai/popup";
 import { subjectColor, subjectLabel } from "@/lib/utils";
-import { LAB_MODULES } from "@/lib/labs/registry";
 
 const Tldraw = dynamic(async () => (await import("tldraw")).Tldraw, {
   ssr: false,
@@ -28,25 +23,19 @@ const Tldraw = dynamic(async () => (await import("tldraw")).Tldraw, {
 export interface RoomInfo { id: string; name: string; subject: string; boardId: string; }
 export interface RoomUser { id: string; name: string; avatarColor: string; }
 
-type SidePanel = "lab" | "ai" | "people";
-
 export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; user: RoomUser; syncUrl: string }) {
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [labPopover, setLabPopover] = useState(false);
-  const [labModule, setLabModule] = useState<string | undefined>(undefined);
-  const [sidePanel, setSidePanel] = useState<SidePanel | null>("lab");
-  const [chatOpen, setChatOpen] = useState(false);
-  const [videoOpen, setVideoOpen] = useState(false);
-  const [latexOpen, setLatexOpen] = useState(false);
-  const [boardAiOpen, setBoardAiOpen] = useState(false);
-  const [boardAiLoading, setBoardAiLoading] = useState(false);
-  const [boardAiAnalysis, setBoardAiAnalysis] = useState<BoardAnalysis | null>(null);
-  const [boardAiError, setBoardAiError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [autoAiOn, setAutoAiOn] = useState(true);
+  const [suggestions, setSuggestions] = useState<PopupSuggestion[]>([]);
   const [invited, setInvited] = useState(false);
   const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { processing: autoAiBusy } = useAutoAI(editor, autoAiOn);
+  const handleSuggest = useCallback((s: PopupSuggestion) => {
+    setSuggestions((prev) => [...prev.filter((x) => x.anchorShapeId !== s.anchorShapeId).slice(-2), s]);
+  }, []);
+
+  const { processing: autoAiBusy } = useAutoAI(editor, autoAiOn, handleSuggest);
 
   useEffect(() => {
     return () => {
@@ -90,40 +79,6 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
     inviteTimer.current = setTimeout(() => setInvited(false), 2000);
   };
 
-  const openSide = (panel: SidePanel) => {
-    setSidePanel(sidePanel === panel ? null : panel);
-    setBoardAiOpen(false);
-  };
-
-  const analyzeBoard = async () => {
-    if (boardAiOpen) {
-      if (!boardAiLoading) setBoardAiOpen(false);
-      return;
-    }
-    if (!editor) return;
-    setBoardAiOpen(true);
-    setBoardAiLoading(true);
-    setBoardAiError(null);
-    setBoardAiAnalysis(null);
-    setLabPopover(false);
-    setSidePanel(null);
-    try {
-      const selected = editor.getSelectedShapeIds();
-      const ids = selected.length > 0 ? selected : [...editor.getCurrentPageShapeIds()];
-      if (ids.length === 0) throw new Error("Doska bo'sh — avval biror narsa yozing yoki chizing");
-      const { url } = await editor.toImageDataUrl(ids, { format: "png", scale: 1.5 });
-      const res = await fetch("/api/ai/vision", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: url }) });
-      if (res.status === 501) { setBoardAiError("ai_not_configured"); return; }
-      const data = (await res.json()) as { analysis?: BoardAnalysis; error?: string };
-      if (!res.ok || !data.analysis) throw new Error(data.error ?? `Xato (${res.status})`);
-      setBoardAiAnalysis(data.analysis);
-    } catch (e) {
-      setBoardAiError(e instanceof Error ? e.message : "Xato yuz berdi");
-    } finally {
-      setBoardAiLoading(false);
-    }
-  };
-
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#f7f8fa]">
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-3">
@@ -145,7 +100,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           {autoAiBusy && (
             <span className="flex items-center gap-1 text-[11px] text-emerald-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-              AI ishlayapti…
+              AI o&apos;qiyapti…
             </span>
           )}
           <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 sm:flex">
@@ -160,13 +115,6 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
             <Copy size={13} />
             {invited ? "Nusxalandi ✓" : "Taklif qilish"}
           </button>
-          <button
-            onClick={() => openSide("people")}
-            className={`rounded-lg p-2 ${sidePanel === "people" ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:bg-slate-100"}`}
-            title="Ishtirokchilar"
-          >
-            <Users size={17} />
-          </button>
         </div>
       </header>
 
@@ -175,171 +123,31 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           <Tldraw store={store} onMount={(e) => setEditor(e)} />
         </div>
 
-        <div className="absolute left-3 top-28 z-[600] flex gap-2">
-          <button
-            onClick={() => { setLabPopover(v => !v); setSidePanel(null); setBoardAiOpen(false); }}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-          >
-            <FlaskConical size={14} />
-            Laboratoriya
-          </button>
-          <button
-            onClick={() => { setLatexOpen(true); setSidePanel(null); setBoardAiOpen(false); }}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-          >
-            Σ LaTeX
-          </button>
-          <button
-            onClick={analyzeBoard}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-          >
-            <ScanSearch size={14} />
-            AI o'qish
-          </button>
-          <button
-            onClick={() => setAutoAiOn(v => !v)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium shadow-sm ${autoAiOn ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
-            title="Yoqilganda AI yangi yozuvlaringizni o'zi o'qib, natijani doskaga chizadi"
-          >
-            <Sparkles size={14} />
-            Avto-AI
-          </button>
-          {labPopover && (
-            <div className="absolute left-0 top-12 z-[590] w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-              {LAB_MODULES.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => { setLabModule(m.id); setSidePanel("lab"); setLabPopover(false); setBoardAiOpen(false); }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
-                >
-                  <span>{m.icon}</span>
-                  {m.title}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          title="AI sozlamalari"
+          aria-label="AI sozlamalari"
+          className="absolute right-3 top-28 z-[600] flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
+        >
+          <Settings size={18} />
+        </button>
 
-        {sidePanel && (
-          <div className={`absolute bottom-16 right-3 top-3 z-[550] flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl ${sidePanel === "people" ? "w-72" : "w-[400px]"}`}>
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
-              <span className="text-sm font-medium text-slate-800">
-                {sidePanel === "lab" ? "Laboratoriya" : sidePanel === "ai" ? "AI yordamchi" : "Ishtirokchilar"}
-              </span>
-              <button
-                onClick={() => setSidePanel(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 p-3">
-              {sidePanel === "lab" && (
-                <LabPanel editor={editor as unknown as BoardEditor | null} roomId={room.id} initialModuleId={labModule} />
-              )}
-              {sidePanel === "ai" && <AIPanel roomName={room.name} subject={subjectLabel(room.subject)} />}
-              {sidePanel === "people" && (
-                <div className="flex h-full flex-col gap-3">
-                  <div className="min-h-0 flex-1">
-                    <PresenceList editor={editor} self={{ name: user.name, color: user.avatarColor }} />
-                  </div>
-                  <button
-                    onClick={copyInvite}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700"
-                  >
-                    <Copy size={13} />
-                    {invited ? "Nusxalandi ✓" : "Taklif qilish"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {boardAiOpen && (
-          <div className="absolute bottom-16 right-3 top-3 z-[550] flex w-[400px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
-              <span className="text-sm font-medium text-slate-800">AI tahlil</span>
-              <button
-                onClick={() => setBoardAiOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 p-3">
-              <BoardAIPanel
-                analysis={boardAiAnalysis}
-                loading={boardAiLoading}
-                error={boardAiError}
-                editor={editor as unknown as BoardEditor | null}
-                onClose={() => setBoardAiOpen(false)}
-                onOpenLab={(moduleId) => { setLabModule(moduleId); setSidePanel("lab"); setBoardAiOpen(false); }}
-              />
-            </div>
-          </div>
-        )}
-
-        {videoOpen && (
-          <div className="absolute bottom-3 left-3 z-[600] flex h-[300px] w-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
-              <span className="text-sm font-medium text-slate-800">Video dars</span>
-              <button
-                onClick={() => setVideoOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <VideoPanel roomId={room.id} userName={user.name} />
-            </div>
-          </div>
-        )}
-
-        {chatOpen && (
-          <div className="absolute bottom-20 right-4 z-[590] flex h-[480px] w-[360px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
-              <span className="text-sm font-medium text-slate-800">Chat</span>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ChatPanel roomId={room.id} user={user} />
-            </div>
-          </div>
-        )}
-
-        <div className="absolute bottom-4 right-4 z-[600] flex gap-2">
-          <button
-            onClick={() => { setChatOpen(v => !v); setSidePanel(null); setVideoOpen(false); }}
-            className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-md ${chatOpen ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"}`}
-            title="Chat"
-          >
-            <MessageSquare size={18} />
-          </button>
-          <button
-            onClick={() => { setVideoOpen(v => !v); setChatOpen(false); setSidePanel(null); }}
-            className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-md ${videoOpen ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"}`}
-            title="Video"
-          >
-            <Video size={18} />
-          </button>
-          <button
-            onClick={() => { openSide("ai"); setChatOpen(false); setVideoOpen(false); }}
-            className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-md ${sidePanel === "ai" ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"}`}
-            title="AI yordamchi"
-          >
-            <Sparkles size={18} />
-          </button>
-        </div>
+        {suggestions.map((s) => (
+          <ShapePopup
+            key={s.id}
+            editor={editor}
+            suggestion={s}
+            onClose={() => setSuggestions((p) => p.filter((x) => x.id !== s.id))}
+          />
+        ))}
       </div>
 
-      <LaTeXDialog editor={editor as unknown as BoardEditor | null} open={latexOpen} onClose={() => setLatexOpen(false)} />
+      <AISettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        autoAiOn={autoAiOn}
+        onAutoAiChange={setAutoAiOn}
+      />
     </div>
   );
 }

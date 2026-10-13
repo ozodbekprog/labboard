@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/server/auth";
+import { getAiConfig } from "@/server/ai-config";
 
 const chatSchema = z.object({
   messages: z.array(
@@ -22,22 +23,22 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid" }, { status: 400 });
   }
 
-  const { AI_API_KEY, AI_BASE_URL, AI_MODEL } = process.env;
-  if (!AI_API_KEY || !AI_MODEL) {
+  const config = await getAiConfig(user.id);
+  if (!config) {
     return Response.json({ error: "ai_not_configured" }, { status: 501 });
   }
 
-  const base = (AI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  const base = config.baseUrl.replace(/\/$/, "");
   const systemPrompt = `Sen LabBoard platformasidagi o'qituvchi yordamchisisan. Javoblarni o'zbek tilida, qisqa va aniq yoz. Kontekst: ${parsed.data.context ?? ""}`;
 
   const res = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
-      "authorization": `Bearer ${AI_API_KEY}`,
+      "authorization": `Bearer ${config.key}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: AI_MODEL,
+      model: config.model,
       stream: true,
       messages: [
         { role: "system", content: systemPrompt },
