@@ -28,6 +28,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
   const [autoAiOn, setAutoAiOn] = useState(true);
   const [suggestions, setSuggestions] = useState<PopupSuggestion[]>([]);
   const [invited, setInvited] = useState(false);
+  const [resolvedSyncUrl, setResolvedSyncUrl] = useState<string | null>(null);
   const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastCursor = useRef(0);
 
@@ -51,9 +52,26 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
   }, []);
 
   useEffect(() => {
-    if (!syncUrl || !room.boardId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/sync-url");
+        if (!res.ok) throw new Error("sync-url fetch failed");
+        const data = await res.json();
+        if (!cancelled) setResolvedSyncUrl(data.url);
+      } catch {
+        if (!cancelled) setResolvedSyncUrl(syncUrl);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [syncUrl]);
+
+  useEffect(() => {
+    if (!resolvedSyncUrl || !room.boardId) return;
     const sync = new BoardSync({
-      url: syncUrl.replace(/^ws/, "ws"),
+      url: resolvedSyncUrl.replace(/^ws/, "ws"),
       roomId: room.boardId,
       name: user.name,
       color: user.avatarColor,
@@ -69,7 +87,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
       unsub();
       syncRef.current = null;
     };
-  }, [syncUrl, room.boardId, store, user.name, user.avatarColor]);
+  }, [resolvedSyncUrl, room.boardId, store, user.name, user.avatarColor]);
 
   const copyInvite = async () => {
     const link = window.location.origin + "/room/" + room.id;
