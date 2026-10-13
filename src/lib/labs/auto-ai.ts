@@ -28,9 +28,22 @@ const ATOM_RADII: Record<string, number> = {
 const EXPRESSION_CHARS = /^[0-9xX+\-*/^%(). a-z]+$/;
 const PREFIX_RE = /^\s*(?:y\s*\(\s*x\s*\)\s*=|y\s*=|f\s*\(\s*x\s*\)\s*=)\s*/i;
 
+const SUPERSCRIPTS = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+const MATH_SYMBOL_MAP: Record<string, string> = {
+  "−": "-",
+  "×": "*",
+  "÷": "/",
+};
+
+export function normalizeMathText(s: string): string {
+  return s
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => "^" + SUPERSCRIPTS.indexOf(ch))
+    .replace(/[−×÷]/g, (ch) => MATH_SYMBOL_MAP[ch] ?? ch);
+}
+
 export function looksLikeFunction(text: string): string | null {
   try {
-    const lines = text
+    const lines = normalizeMathText(text)
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean)
