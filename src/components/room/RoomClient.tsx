@@ -127,7 +127,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           <Tldraw store={store} onMount={(e) => setEditor(e)} />
         </div>
 
-        <div className="absolute left-3 top-3 z-20 flex gap-2">
+        <div className="absolute left-3 top-28 z-[600] flex gap-2">
           <button
             onClick={() => { setLabPopover(v => !v); setSidePanel(null); }}
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
@@ -142,7 +142,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
             Σ LaTeX
           </button>
           {labPopover && (
-            <div className="absolute left-0 top-12 w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+            <div className="absolute left-0 top-12 z-[590] w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
               {LAB_MODULES.map((m) => (
                 <button
                   key={m.id}
@@ -158,7 +158,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
         </div>
 
         {sidePanel && (
-          <div className={`absolute bottom-16 right-3 top-3 z-20 flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl ${sidePanel === "people" ? "w-72" : "w-[400px]"}`}>
+          <div className={`absolute bottom-16 right-3 top-3 z-[550] flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl ${sidePanel === "people" ? "w-72" : "w-[400px]"}`}>
             <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
               <span className="text-sm font-medium text-slate-800">
                 {sidePanel === "lab" ? "Laboratoriya" : sidePanel === "ai" ? "AI yordamchi" : "Ishtirokchilar"}
@@ -194,7 +194,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
         )}
 
         {videoOpen && (
-          <div className="absolute bottom-3 left-3 z-20 flex h-[300px] w-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+          <div className="absolute bottom-3 left-3 z-[600] flex h-[300px] w-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
             <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
               <span className="text-sm font-medium text-slate-800">Video dars</span>
               <button
@@ -211,7 +211,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
         )}
 
         {chatOpen && (
-          <div className="absolute bottom-20 right-4 z-20 flex h-[480px] w-[360px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+          <div className="absolute bottom-20 right-4 z-[590] flex h-[480px] w-[360px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
             <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
               <span className="text-sm font-medium text-slate-800">Chat</span>
               <button
@@ -227,7 +227,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
           </div>
         )}
 
-        <div className="absolute bottom-4 right-4 z-30 flex gap-2">
+        <div className="absolute bottom-4 right-4 z-[600] flex gap-2">
           <button
             onClick={() => { setChatOpen(v => !v); setSidePanel(null); setVideoOpen(false); }}
             className={`flex h-11 w-11 items-center justify-center rounded-full border shadow-md ${chatOpen ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"}`}

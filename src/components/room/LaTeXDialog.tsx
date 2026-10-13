@@ -108,7 +108,7 @@ export default function LaTeXDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30"
+      className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-900/30"
       onClick={onClose}
     >
       <div
