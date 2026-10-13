@@ -100,17 +100,39 @@ Teacher akkaunti bilan kirsa tayyor mazmun ko'rinadi: **2 ta xona** (Fizika lab,
   - **Video** — LiveKit orqali jonli dars
   - **AI** — streaming javoblar
 
+## Aqlli doska (AI Vision)
+
+**Nima qiladi:** doskaga yozilgan qo'lyozma, formula yoki chizma suratga olinadi va AI (vision model) uni o'qib tahlil qiladi: formula, tenglama, grafik, molekula, fizika masalasi yoki oddiy matn ekanligini aniqlaydi.
+
+**Qanday ishlatiladi:** xonada "🔍 AI o'qish" tugmasi → agar biror shakl tanlangan bo'lsa faqat o'sha tanlov, aks holda butun doska tahlil qilinadi.
+
+**Natija bilan amallar:**
+
+- 📈 **Grafik chizish** — `f(x)` ifodasidan grafik PNG qilib doskaga qo'yiladi
+- 🧮 **Yechish** — tenglama sonli ildizlari (`x = ...`) hisoblanadi (mathjs)
+- 🧬 **Molekula** — 15 ta tayyor molekuladan 3D model (three.js); aylantirish va doskaga suratga olish mumkin
+- 🎯 **Simulyatsiyani ochish** — fizika masalasi aniqlansa, snaryad simulyatsiyasi ochiladi
+- 📝 **Xulosani doskaga** — AI xulosasini matn sifatida doskaga yozadi
+
+**Sozlash:** `.env.local` da `AI_API_KEY` va `AI_MODEL` kerak (OpenAI-mos endpoint; `AI_BASE_URL` bilan o'zgartiriladi). Ixtiyoriy `AI_VISION_MODEL`. Kalit bo'lmasa panel "AI sozlanmagan" hint ko'rsatadi.
+
+**Eslatma:** AI xato qilishi mumkin. API endpointlari: `POST /api/ai/vision` (surat → tahlil JSON), `POST /api/math` (evaluate / simplify / derivative / solve).
+
 ## Yo'l xaritasi
 
+**Bajarildi (AI):** doskani AI vision bilan o'qish (aqlli doska), grafik chizish, 3D molekulalar
+
+**Qolgan:**
+
 - tldraw ichida jonli interaktiv widgetlar (pin rasmidan tashqari)
-- Python (Pyodide) va SQL runnerlar
+- Python (Pyodide) runner
+- prod deploy: Vercel + sync server (VPS/Fly.io) + LiveKit Cloud
 - fizika: elektr zanjirlari, tovushqonlar
 - kimyo: reaksiya balanseri
 - biologiya: 3D hujayra
 - dars transkripti + AI xulosa
 - sync serverga token-autentifikatsiya
 - Postgres'ga o'tish
-- prod deploy: Vercel + sync server (VPS/Fly.io) + LiveKit Cloud
 - mobil ko'rinish
 
 ## Muammolar / cheklovlar

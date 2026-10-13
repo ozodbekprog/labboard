@@ -7,8 +7,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSync } from "@tldraw/sync";
 import type { Editor, TLAssetStore } from "tldraw";
-import { ArrowLeft, Copy, MessageSquare, Sparkles, Users, Video, X, FlaskConical } from "lucide-react";
+import { ArrowLeft, Copy, MessageSquare, ScanSearch, Sparkles, Users, Video, X, FlaskConical } from "lucide-react";
 import LabPanel, { type BoardEditor } from "./LabPanel";
+import BoardAIPanel from "./BoardAIPanel";
+import type { BoardAnalysis } from "@/lib/ai/types";
 import ChatPanel from "./ChatPanel";
 import AIPanel from "./AIPanel";
 import VideoPanel from "./VideoPanel";
@@ -35,6 +37,10 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
   const [chatOpen, setChatOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [latexOpen, setLatexOpen] = useState(false);
+  const [boardAiOpen, setBoardAiOpen] = useState(false);
+  const [boardAiLoading, setBoardAiLoading] = useState(false);
+  const [boardAiAnalysis, setBoardAiAnalysis] = useState<BoardAnalysis | null>(null);
+  const [boardAiError, setBoardAiError] = useState<string | null>(null);
   const [invited, setInvited] = useState(false);
   const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -80,7 +86,39 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
     inviteTimer.current = setTimeout(() => setInvited(false), 2000);
   };
 
-  const openSide = (panel: SidePanel) => setSidePanel(sidePanel === panel ? null : panel);
+  const openSide = (panel: SidePanel) => {
+    setSidePanel(sidePanel === panel ? null : panel);
+    setBoardAiOpen(false);
+  };
+
+  const analyzeBoard = async () => {
+    if (boardAiOpen) {
+      if (!boardAiLoading) setBoardAiOpen(false);
+      return;
+    }
+    if (!editor) return;
+    setBoardAiOpen(true);
+    setBoardAiLoading(true);
+    setBoardAiError(null);
+    setBoardAiAnalysis(null);
+    setLabPopover(false);
+    setSidePanel(null);
+    try {
+      const selected = editor.getSelectedShapeIds();
+      const ids = selected.length > 0 ? selected : [...editor.getCurrentPageShapeIds()];
+      if (ids.length === 0) throw new Error("Doska bo'sh — avval biror narsa yozing yoki chizing");
+      const { url } = await editor.toImageDataUrl(ids, { format: "png", scale: 1.5 });
+      const res = await fetch("/api/ai/vision", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: url }) });
+      if (res.status === 501) { setBoardAiError("ai_not_configured"); return; }
+      const data = (await res.json()) as { analysis?: BoardAnalysis; error?: string };
+      if (!res.ok || !data.analysis) throw new Error(data.error ?? `Xato (${res.status})`);
+      setBoardAiAnalysis(data.analysis);
+    } catch (e) {
+      setBoardAiError(e instanceof Error ? e.message : "Xato yuz berdi");
+    } finally {
+      setBoardAiLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#f7f8fa]">
@@ -129,24 +167,31 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
 
         <div className="absolute left-3 top-28 z-[600] flex gap-2">
           <button
-            onClick={() => { setLabPopover(v => !v); setSidePanel(null); }}
+            onClick={() => { setLabPopover(v => !v); setSidePanel(null); setBoardAiOpen(false); }}
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
           >
             <FlaskConical size={14} />
             Laboratoriya
           </button>
           <button
-            onClick={() => { setLatexOpen(true); setSidePanel(null); }}
+            onClick={() => { setLatexOpen(true); setSidePanel(null); setBoardAiOpen(false); }}
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
           >
             Σ LaTeX
+          </button>
+          <button
+            onClick={analyzeBoard}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            <ScanSearch size={14} />
+            AI o'qish
           </button>
           {labPopover && (
             <div className="absolute left-0 top-12 z-[590] w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
               {LAB_MODULES.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => { setLabModule(m.id); setSidePanel("lab"); setLabPopover(false); }}
+                  onClick={() => { setLabModule(m.id); setSidePanel("lab"); setLabPopover(false); setBoardAiOpen(false); }}
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50"
                 >
                   <span>{m.icon}</span>
@@ -189,6 +234,30 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {boardAiOpen && (
+          <div className="absolute bottom-16 right-3 top-3 z-[550] flex w-[400px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-2">
+              <span className="text-sm font-medium text-slate-800">AI tahlil</span>
+              <button
+                onClick={() => setBoardAiOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 p-3">
+              <BoardAIPanel
+                analysis={boardAiAnalysis}
+                loading={boardAiLoading}
+                error={boardAiError}
+                editor={editor as unknown as BoardEditor | null}
+                onClose={() => setBoardAiOpen(false)}
+                onOpenLab={(moduleId) => { setLabModule(moduleId); setSidePanel("lab"); setBoardAiOpen(false); }}
+              />
             </div>
           </div>
         )}
