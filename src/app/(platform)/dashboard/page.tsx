@@ -11,14 +11,14 @@ export const metadata = { title: "Xonalar — LabBoard" };
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  const myRooms = db
+  const myRooms = await db
     .select()
     .from(rooms)
     .where(eq(rooms.ownerId, user.id))
     .orderBy(desc(rooms.createdAt))
     .all();
-  const myGroups = db.select().from(groups).where(eq(groups.teacherId, user.id)).all();
-  const upcoming = db
+  const myGroups = await db.select().from(groups).where(eq(groups.teacherId, user.id)).all();
+  const upcoming = await db
     .select({ lesson: lessons, room: rooms })
     .from(lessons)
     .innerJoin(rooms, eq(lessons.roomId, rooms.id))

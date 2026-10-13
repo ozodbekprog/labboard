@@ -10,7 +10,7 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const user = await requireUser();
 
-  const room = db.select().from(rooms).where(eq(rooms.id, id)).get();
+  const room = await db.select().from(rooms).where(eq(rooms.id, id)).get();
   if (!room) notFound();
 
   const syncUrl = process.env.NEXT_PUBLIC_SYNC_URL ?? "ws://localhost:5858";

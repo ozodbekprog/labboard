@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "missing_roomId" }, { status: 400 });
   }
 
-  const rows = db
+  const rows = (await db
     .select({
       id: messages.id,
       body: messages.body,
@@ -30,8 +30,7 @@ export async function GET(request: Request) {
     .where(eq(messages.roomId, roomId))
     .orderBy(desc(messages.createdAt))
     .limit(100)
-    .all()
-    .reverse();
+    .all()).reverse();
 
   return Response.json({ messages: rows });
 }
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid" }, { status: 400 });
   }
 
-  db.insert(messages)
+  await db.insert(messages)
     .values({
       id: newId("m"),
       roomId: parsed.data.roomId,

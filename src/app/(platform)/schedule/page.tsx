@@ -17,7 +17,7 @@ export default async function SchedulePage() {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 7);
 
-  const weekLessons = db
+  const weekLessons = await db
     .select({
       id: lessons.id,
       title: lessons.title,
@@ -39,7 +39,7 @@ export default async function SchedulePage() {
     .orderBy(asc(lessons.startsAt))
     .all();
 
-  const myRooms = db
+  const myRooms = await db
     .select({ id: rooms.id, name: rooms.name })
     .from(rooms)
     .where(eq(rooms.ownerId, user.id))

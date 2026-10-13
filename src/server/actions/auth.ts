@@ -42,7 +42,7 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
     return { error: parsed.error.issues[0]?.message ?? "Ma'lumotlar noto'g'ri" };
   }
   const { name, email, password, role } = parsed.data;
-  const existing = db.select().from(users).where(eq(users.email, email)).get();
+  const existing = await db.select().from(users).where(eq(users.email, email)).get();
   if (existing) return { error: "Bu email allaqachon ro'yxatdan o'tgan" };
 
   const user = {
@@ -54,7 +54,7 @@ export async function signUpAction(_prev: AuthState, formData: FormData): Promis
     avatarColor: avatarColorFor(name),
     createdAt: Date.now(),
   };
-  db.insert(users).values(user).run();
+  await db.insert(users).values(user).run();
   await createSession(user.id);
   redirect("/dashboard");
 }
@@ -68,7 +68,7 @@ export async function signInAction(_prev: AuthState, formData: FormData): Promis
     return { error: parsed.error.issues[0]?.message ?? "Ma'lumotlar noto'g'ri" };
   }
   const { email, password } = parsed.data;
-  const user = db.select().from(users).where(eq(users.email, email)).get();
+  const user = await db.select().from(users).where(eq(users.email, email)).get();
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { error: "Email yoki parol xato" };
   }

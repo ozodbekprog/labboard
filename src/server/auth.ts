@@ -27,7 +27,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 export async function createSession(userId: string): Promise<void> {
   const token = crypto.randomBytes(32).toString("base64url");
   const now = Date.now();
-  db.insert(sessions)
+  await db.insert(sessions)
     .values({ id: token, userId, createdAt: now, expiresAt: now + SESSION_TTL_MS })
     .run();
   const store = await cookies();
@@ -44,7 +44,7 @@ export async function destroySession(): Promise<void> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (token) {
-    db.delete(sessions).where(eq(sessions.id, token)).run();
+    await db.delete(sessions).where(eq(sessions.id, token)).run();
   }
   store.delete(SESSION_COOKIE);
 }
@@ -53,7 +53,7 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const row = db
+  const row = await db
     .select({ user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))

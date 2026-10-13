@@ -15,7 +15,7 @@ export async function createRoomAction(formData: FormData): Promise<void> {
   const groupId = String(formData.get("groupId") ?? "") || null;
 
   const id = newId("r");
-  db.insert(rooms)
+  await db.insert(rooms)
     .values({
       id,
       name,
@@ -34,7 +34,7 @@ export async function createGroupAction(formData: FormData): Promise<void> {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return;
   const description = String(formData.get("description") ?? "").trim();
-  db.insert(groups)
+  await db.insert(groups)
     .values({ id: newId("g"), name, description, teacherId: user.id, createdAt: Date.now() })
     .run();
   revalidatePath("/groups");
@@ -44,17 +44,17 @@ export async function addGroupMemberAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   const groupId = String(formData.get("groupId") ?? "");
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const group = db.select().from(groups).where(and(eq(groups.id, groupId), eq(groups.teacherId, user.id))).get();
+  const group = await db.select().from(groups).where(and(eq(groups.id, groupId), eq(groups.teacherId, user.id))).get();
   if (!group) return;
-  const member = db.select().from(users).where(eq(users.email, email)).get();
+  const member = await db.select().from(users).where(eq(users.email, email)).get();
   if (!member) return;
-  const exists = db
+  const exists = await db
     .select()
     .from(groupMembers)
     .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, member.id)))
     .get();
   if (!exists) {
-    db.insert(groupMembers)
+    await db.insert(groupMembers)
       .values({ id: newId("gm"), groupId, userId: member.id, createdAt: Date.now() })
       .run();
   }
@@ -69,12 +69,12 @@ export async function createLessonAction(formData: FormData): Promise<void> {
   const time = String(formData.get("time") ?? "09:00");
   const durationMin = Math.min(240, Math.max(15, Number(formData.get("duration") ?? 60)));
 
-  const room = db.select().from(rooms).where(eq(rooms.id, roomId)).get();
+  const room = await db.select().from(rooms).where(eq(rooms.id, roomId)).get();
   if (!room || !date) return;
 
   const startsAt = new Date(`${date}T${time}:00`).getTime();
   if (isNaN(startsAt)) return;
-  db.insert(lessons)
+  await db.insert(lessons)
     .values({
       id: newId("l"),
       roomId,

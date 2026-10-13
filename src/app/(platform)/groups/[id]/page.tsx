@@ -13,20 +13,20 @@ export default async function GroupPage({ params }: PageProps<"/groups/[id]">) {
   const { id } = await params;
   const user = await requireUser();
 
-  const group = db
+  const group = await db
     .select()
     .from(groups)
     .where(and(eq(groups.id, id), eq(groups.teacherId, user.id)))
     .get();
   if (!group) notFound();
 
-  const members = db
+  const members = await db
     .select({ user: users })
     .from(groupMembers)
     .innerJoin(users, eq(users.id, groupMembers.userId))
     .where(eq(groupMembers.groupId, id))
     .all();
-  const groupRooms = db.select().from(rooms).where(eq(rooms.groupId, id)).all();
+  const groupRooms = await db.select().from(rooms).where(eq(rooms.groupId, id)).all();
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-8">

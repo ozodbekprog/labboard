@@ -13,6 +13,7 @@
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
     "@tldraw/sync": "^5.5.2",

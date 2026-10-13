@@ -9,7 +9,7 @@ export const metadata = { title: "Guruhlar — LabBoard" };
 export default async function GroupsPage() {
   const user = await requireUser();
 
-  const myGroups = db
+  const myGroups = await db
     .select({
       group: groups,
       memberCount: count(groupMembers.id),
