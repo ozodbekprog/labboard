@@ -1,17 +1,6 @@
 "use client";
 
-import { useValue } from "tldraw";
-import type { Editor } from "tldraw";
-
-interface PresenceUser {
-  userName: string;
-  color?: string;
-}
-
-interface PresenceSelf {
-  name: string;
-  color: string;
-}
+import type { PresenceUser } from "@/lib/board/types";
 
 function initials(name: string): string {
   return name.trim().slice(0, 2).toUpperCase();
@@ -39,96 +28,38 @@ function Avatar({
   );
 }
 
-export function PresenceAvatars({ editor, self }: { editor: Editor | null; self: PresenceSelf }) {
-  if (!editor) {
-    return (
-      <div className="flex items-center">
-        <Avatar name={self.name} color={self.color} className="h-7 w-7 text-[10px]" />
-      </div>
-    );
-  }
-  return <PresenceAvatarsInner editor={editor} self={self} />;
-}
-
-function PresenceAvatarsInner({ editor, self }: { editor: Editor; self: PresenceSelf }) {
-  const presences = useValue<PresenceUser[]>(
-    "presence",
-    () => Array.from(editor.store.query.records("instance_presence").get() as unknown as PresenceUser[]),
-    [editor],
-  );
+export function PresenceAvatars({
+  self,
+  users,
+}: {
+  self: { name: string; color: string };
+  users: PresenceUser[];
+}) {
   const seen = new Set<string>([self.name]);
   const others: PresenceUser[] = [];
-  for (const p of presences) {
-    if (!p || !p.userName || seen.has(p.userName)) continue;
-    seen.add(p.userName);
+  for (const p of users) {
+    if (!p || !p.name || seen.has(p.name)) continue;
+    seen.add(p.name);
     others.push(p);
   }
   const shown = others.slice(0, 4);
+  const extra = others.length - shown.length;
   return (
     <div className="flex items-center">
-      <Avatar name={self.name} color={self.color} className="h-7 w-7 text-[10px]" />
+      <Avatar name={self.name} color={self.color} title="Siz" className="h-7 w-7 text-[10px]" />
       {shown.map((p) => (
         <Avatar
-          key={p.userName}
-          name={p.userName}
+          key={p.name}
+          name={p.name}
           color={p.color ?? "#64748b"}
           className="-ml-1.5 h-7 w-7 text-[10px]"
         />
       ))}
-    </div>
-  );
-}
-
-export function PresenceList({ editor, self }: { editor: Editor | null; self: PresenceSelf }) {
-  if (!editor) {
-    return (
-      <div className="flex flex-col gap-1">
-        <PresenceRow name={self.name} color={self.color} self />
-      </div>
-    );
-  }
-  return <PresenceListInner editor={editor} self={self} />;
-}
-
-function PresenceListInner({ editor, self }: { editor: Editor; self: PresenceSelf }) {
-  const presences = useValue<PresenceUser[]>(
-    "presence",
-    () => Array.from(editor.store.query.records("instance_presence").get() as unknown as PresenceUser[]),
-    [editor],
-  );
-  const seen = new Set<string>([self.name]);
-  const others: PresenceUser[] = [];
-  for (const p of presences) {
-    if (!p || !p.userName || seen.has(p.userName)) continue;
-    seen.add(p.userName);
-    others.push(p);
-  }
-  return (
-    <div className="flex flex-col gap-1">
-      <PresenceRow name={self.name} color={self.color} self />
-      {others.map((p) => (
-        <PresenceRow key={p.userName} name={p.userName} color={p.color} />
-      ))}
-    </div>
-  );
-}
-
-function PresenceRow({ name, color, self }: { name: string; color?: string; self?: boolean }) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-slate-50">
-      <Avatar
-        name={name}
-        color={color ?? "#64748b"}
-        className="h-9 w-9 text-xs"
-      />
-      <div className="min-w-0">
-        <div className="truncate text-sm text-slate-800">
-          {name}
-          {self ? " (Siz)" : ""}
-        </div>
-        <div className="text-[11px] text-slate-400">online</div>
-      </div>
-      <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+      {extra > 0 && (
+        <span className="-ml-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-300 text-[10px] font-semibold text-slate-700">
+          +{extra}
+        </span>
+      )}
     </div>
   );
 }

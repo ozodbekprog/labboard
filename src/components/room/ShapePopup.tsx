@@ -1,62 +1,51 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useValue } from "tldraw";
-import type { Editor, TLShapeId } from "tldraw";
 import { renderGraphPNG } from "@/lib/labs/graph-render";
+import { renderMoleculePNG } from "@/lib/labs/auto-ai";
 import {
-  insertImageShapeNextTo,
-  insertNoteNextTo,
-  renderMoleculePNG,
-} from "@/lib/labs/auto-ai";
-import type { Bounds } from "@/lib/labs/auto-ai";
+  insertImageFromFile,
+  insertNote,
+} from "@/lib/board/insert";
 import type { PopupSuggestion } from "@/lib/ai/popup";
-import MoleculeViewer from "./MoleculeViewer";
+import type { BoardApi, ScreenRect } from "@/components/board/Board";
 
 const PIN_BUTTON =
   "rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-slate-700";
 
 export default function ShapePopup({
-  editor,
+  api,
   suggestion,
   onClose,
 }: {
-  editor: Editor | null;
+  api: BoardApi | null;
   suggestion: PopupSuggestion;
   onClose: () => void;
 }) {
-  const camera = useValue(
-    "cam",
-    () => {
-      if (!editor) return null;
-      void editor.getViewportScreenBounds();
-      return editor.getCamera();
-    },
-    [editor],
-  );
+  const [anchor, setAnchor] = useState<ScreenRect | null>(null);
 
-  if (!editor || !camera) return null;
+  useEffect(() => {
+    let disposed = false;
+    const update = () => {
+      if (disposed) return;
+      setAnchor(api ? api.getShapeScreenRect(suggestion.anchorShapeId) : null);
+    };
+    update();
+    const unsubViewport = api ? api.subscribeViewport(update) : undefined;
+    const tick = setInterval(update, 500);
+    return () => {
+      disposed = true;
+      if (unsubViewport) unsubViewport();
+      clearInterval(tick);
+    };
+  }, [api, suggestion.anchorShapeId]);
 
-  const bounds = editor.getShapePageBounds(
-    suggestion.anchorShapeId as TLShapeId,
-  );
-  if (!bounds) return null;
+  if (!api || !anchor) return null;
 
-  const viewport = editor.getViewportScreenBounds();
-  const screenPos = editor.pageToScreen({
-    x: bounds.maxX + 16,
-    y: bounds.minY + 8,
-  });
-  const left = Math.max(8, Math.min(screenPos.x, viewport.width - 300));
-  const top = Math.max(20, Math.min(screenPos.y, viewport.height - 260));
+  const left = anchor.x + anchor.w + 16;
+  const top = anchor.y + 8;
 
   const data = suggestion.data;
-  const sourceBounds: Bounds = {
-    minX: bounds.minX,
-    minY: bounds.minY,
-    maxX: bounds.maxX,
-    maxY: bounds.maxY,
-  };
 
   return (
     <div
@@ -75,26 +64,19 @@ export default function ShapePopup({
             ✕
           </button>
         </div>
-        <PopupBody
-          editor={editor}
-          suggestion={suggestion}
-          sourceBounds={sourceBounds}
-          onClose={onClose}
-        />
+        <PopupBody api={api} suggestion={suggestion} onClose={onClose} />
       </div>
     </div>
   );
 }
 
 function PopupBody({
-  editor,
+  api,
   suggestion,
-  sourceBounds,
   onClose,
 }: {
-  editor: Editor;
+  api: BoardApi;
   suggestion: PopupSuggestion;
-  sourceBounds: Bounds;
   onClose: () => void;
 }) {
   const data = suggestion.data;
@@ -117,8 +99,8 @@ function PopupBody({
     return (
       <GraphBody
         expression={data.expression ?? ""}
-        editor={editor}
-        sourceBounds={sourceBounds}
+        api={api}
+        anchorShapeId={suggestion.anchorShapeId}
         onClose={onClose}
       />
     );
@@ -128,8 +110,8 @@ function PopupBody({
     return (
       <EquationBody
         equation={data.equation ?? ""}
-        editor={editor}
-        sourceBounds={sourceBounds}
+        api={api}
+        anchorShapeId={suggestion.anchorShapeId}
         onClose={onClose}
       />
     );
@@ -139,8 +121,8 @@ function PopupBody({
     return (
       <MoleculeBody
         molecule={data.molecule ?? data.title}
-        editor={editor}
-        sourceBounds={sourceBounds}
+        api={api}
+        anchorShapeId={suggestion.anchorShapeId}
         onClose={onClose}
       />
     );
@@ -153,8 +135,8 @@ function PopupBody({
       .join(", ")}`;
     return (
       <PinNoteBody
-        editor={editor}
-        sourceBounds={sourceBounds}
+        api={api}
+        anchorShapeId={suggestion.anchorShapeId}
         onClose={onClose}
         text={text}
         rows={Object.entries(params).map(([k, v]) => (
@@ -179,13 +161,13 @@ function PinFeedback({ pinned }: { pinned: boolean }) {
 
 function GraphBody({
   expression,
-  editor,
-  sourceBounds,
+  api,
+  anchorShapeId,
   onClose,
 }: {
   expression: string;
-  editor: Editor;
-  sourceBounds: Bounds;
+  api: BoardApi;
+  anchorShapeId: string;
   onClose: () => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
@@ -241,9 +223,7 @@ function GraphBody({
           onClick={async () => {
             if (!file) return;
             try {
-              await insertImageShapeNextTo(editor, file, sourceBounds, {
-                gap: 48,
-              });
+              await insertImageFromFile(api, file, anchorShapeId);
               setPinned(true);
               setTimeout(onClose, 800);
             } catch (err) {
@@ -261,13 +241,13 @@ function GraphBody({
 
 function EquationBody({
   equation,
-  editor,
-  sourceBounds,
+  api,
+  anchorShapeId,
   onClose,
 }: {
   equation: string;
-  editor: Editor;
-  sourceBounds: Bounds;
+  api: BoardApi;
+  anchorShapeId: string;
   onClose: () => void;
 }) {
   const [text, setText] = useState<string | null>(null);
@@ -312,7 +292,7 @@ function EquationBody({
           onClick={async () => {
             if (!text) return;
             try {
-              await insertNoteNextTo(editor, `🧮 ${text}`, sourceBounds);
+              insertNote(api, `🧮 ${text}`, anchorShapeId);
               setPinned(true);
               setTimeout(onClose, 800);
             } catch (err) {
@@ -330,45 +310,45 @@ function EquationBody({
 
 function MoleculeBody({
   molecule,
-  editor,
-  sourceBounds,
+  api,
+  anchorShapeId,
   onClose,
 }: {
   molecule: string;
-  editor: Editor;
-  sourceBounds: Bounds;
+  api: BoardApi;
+  anchorShapeId: string;
   onClose: () => void;
 }) {
   const [pinFile, setPinFile] = useState<File | null>(null);
   const [pinned, setPinned] = useState(false);
 
+  const pin = async () => {
+    try {
+      let f = pinFile;
+      if (!f) {
+        f = await renderMoleculePNG(molecule);
+        if (f) setPinFile(f);
+      }
+      if (!f) return;
+      await insertImageFromFile(api, f, anchorShapeId);
+      setPinned(true);
+      setTimeout(onClose, 800);
+    } catch (err) {
+      console.warn("[ShapePopup] pin molecule failed", err);
+    }
+  };
+
   return (
     <>
-      <div className="mt-2 h-[240px] overflow-hidden rounded-lg">
-        <MoleculeViewer molecule={molecule} editor={null} />
+      <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-3 text-center text-[11px] text-slate-500">
+        🧬 {molecule}
       </div>
       <div className="mt-2 flex items-center gap-2">
         <button
           type="button"
           className={PIN_BUTTON}
           disabled={pinned}
-          onClick={async () => {
-            try {
-              let f = pinFile;
-              if (!f) {
-                f = await renderMoleculePNG(molecule);
-                if (f) setPinFile(f);
-              }
-              if (!f) return;
-              await insertImageShapeNextTo(editor, f, sourceBounds, {
-                gap: 48,
-              });
-              setPinned(true);
-              setTimeout(onClose, 800);
-            } catch (err) {
-              console.warn("[ShapePopup] pin molecule failed", err);
-            }
-          }}
+          onClick={pin}
         >
           📌 Doskaga qo&apos;yish
         </button>
@@ -379,14 +359,14 @@ function MoleculeBody({
 }
 
 function PinNoteBody({
-  editor,
-  sourceBounds,
+  api,
+  anchorShapeId,
   onClose,
   text,
   rows,
 }: {
-  editor: Editor;
-  sourceBounds: Bounds;
+  api: BoardApi;
+  anchorShapeId: string;
   onClose: () => void;
   text: string;
   rows: React.ReactNode[];
@@ -403,7 +383,7 @@ function PinNoteBody({
           disabled={pinned}
           onClick={async () => {
             try {
-              await insertNoteNextTo(editor, text, sourceBounds);
+              insertNote(api, text, anchorShapeId);
               setPinned(true);
               setTimeout(onClose, 800);
             } catch (err) {

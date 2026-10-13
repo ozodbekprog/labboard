@@ -1,13 +1,13 @@
 "use client";
 
-import "tldraw/tldraw.css";
-
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSync } from "@tldraw/sync";
-import type { Editor, TLAssetStore } from "tldraw";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Copy, Settings } from "lucide-react";
+import Board from "@/components/board/Board";
+import type { BoardApi } from "@/components/board/Board";
+import { BoardStore } from "@/lib/board/store";
+import type { PresenceUser } from "@/lib/board/types";
+import BoardSync from "@/lib/board/sync";
 import { PresenceAvatars } from "./Presence";
 import AISettingsModal from "./AISettingsModal";
 import ShapePopup from "./ShapePopup";
@@ -15,27 +15,34 @@ import { useAutoAI } from "./useAutoAI";
 import type { PopupSuggestion } from "@/lib/ai/popup";
 import { subjectColor, subjectLabel } from "@/lib/utils";
 
-const Tldraw = dynamic(async () => (await import("tldraw")).Tldraw, {
-  ssr: false,
-  loading: () => <div className="grid h-full place-items-center text-sm text-slate-400">Dosha yuklanmoqda…</div>,
-});
-
 export interface RoomInfo { id: string; name: string; subject: string; boardId: string; }
 export interface RoomUser { id: string; name: string; avatarColor: string; }
 
 export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; user: RoomUser; syncUrl: string }) {
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [store] = useState(() => new BoardStore());
+  const apiRef = useRef<BoardApi | null>(null);
+  const syncRef = useRef<BoardSync | null>(null);
+  const [presence, setPresence] = useState<PresenceUser[]>([]);
+  const [status, setStatus] = useState<"connecting" | "online" | "offline">("connecting");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [autoAiOn, setAutoAiOn] = useState(true);
   const [suggestions, setSuggestions] = useState<PopupSuggestion[]>([]);
   const [invited, setInvited] = useState(false);
   const inviteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCursor = useRef(0);
 
   const handleSuggest = useCallback((s: PopupSuggestion) => {
     setSuggestions((prev) => [...prev.filter((x) => x.anchorShapeId !== s.anchorShapeId).slice(-2), s]);
   }, []);
 
-  const { processing: autoAiBusy } = useAutoAI(editor, autoAiOn, handleSuggest);
+  const { processing: autoAiBusy } = useAutoAI({ store, apiRef, enabled: autoAiOn, onSuggest: handleSuggest });
+
+  const handleCursor = useCallback((p: { x: number; y: number }) => {
+    const now = Date.now();
+    if (now - lastCursor.current < 40) return;
+    lastCursor.current = now;
+    syncRef.current?.sendCursor(p);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -43,22 +50,26 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
     };
   }, []);
 
-  const assets = useMemo<TLAssetStore>(() => ({
-    upload: async (asset, file) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/assets", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Fayl yuklanmadi");
-      const data = (await res.json()) as { src: string };
-      return { src: data.src };
-    },
-    resolve: (asset) => (asset.props as { src?: string }).src ?? null,
-  }), []);
-
-  const store = useSync({
-    uri: `${syncUrl}/connect/${encodeURIComponent(room.boardId)}`,
-    assets,
-  });
+  useEffect(() => {
+    if (!syncUrl || !room.boardId) return;
+    const sync = new BoardSync({
+      url: syncUrl.replace(/^ws/, "ws"),
+      roomId: room.boardId,
+      name: user.name,
+      color: user.avatarColor,
+      store,
+      onPresence: setPresence,
+      onStatus: setStatus,
+    });
+    syncRef.current = sync;
+    sync.connect();
+    const unsub = store.subscribe(() => {});
+    return () => {
+      sync.destroy();
+      unsub();
+      syncRef.current = null;
+    };
+  }, [syncUrl, room.boardId, store, user.name, user.avatarColor]);
 
   const copyInvite = async () => {
     const link = window.location.origin + "/room/" + room.id;
@@ -104,10 +115,12 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
             </span>
           )}
           <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 sm:flex">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            {status === "online" && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
+            {status === "connecting" && <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />}
+            {status === "offline" && <span className="h-2 w-2 rounded-full bg-rose-500" />}
             real-time
           </span>
-          <PresenceAvatars editor={editor} self={{ name: user.name, color: user.avatarColor }} />
+          <PresenceAvatars self={{ name: user.name, color: user.avatarColor }} users={presence} />
           <button
             onClick={copyInvite}
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
@@ -119,9 +132,13 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
       </header>
 
       <div className="relative min-h-0 flex-1">
-        <div className="absolute inset-0">
-          <Tldraw store={store} onMount={(e) => setEditor(e)} />
-        </div>
+        <Board
+          store={store}
+          presence={presence}
+          userName={user.name}
+          onReady={(api) => { apiRef.current = api; }}
+          onCursor={handleCursor}
+        />
 
         <button
           onClick={() => setSettingsOpen(true)}
@@ -135,7 +152,7 @@ export default function RoomClient({ room, user, syncUrl }: { room: RoomInfo; us
         {suggestions.map((s) => (
           <ShapePopup
             key={s.id}
-            editor={editor}
+            api={apiRef.current}
             suggestion={s}
             onClose={() => setSuggestions((p) => p.filter((x) => x.id !== s.id))}
           />

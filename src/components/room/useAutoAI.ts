@@ -1,35 +1,88 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Editor, TLShape, TLShapeId } from "tldraw";
-import { isShape } from "tldraw";
+import type { MutableRefObject } from "react";
 import { looksLikeFunction } from "@/lib/labs/auto-ai";
 import { compileExpression } from "@/lib/labs/expr";
 import type { PopupSuggestion } from "@/lib/ai/popup";
 import type { BoardAnalysis } from "@/lib/ai/types";
+import type { BoardApi } from "@/components/board/Board";
+import type { BoardStore } from "@/lib/board/store";
+import type { Shape, TextShape } from "@/lib/board/types";
 
 const DEBOUNCE_MS = 1800;
 const MIN_SIZE = 8;
 
-function shapeText(shape: TLShape): string {
-  const p = (shape as { props?: { richText?: unknown; text?: unknown } }).props;
-  const rt = p?.richText as
-    | { type?: string; content?: Array<{ content?: Array<{ text?: string }> }> }
-    | undefined;
-  if (rt && Array.isArray(rt.content)) {
-    return rt.content
-      .flatMap((b) => (Array.isArray(b.content) ? b.content : []))
-      .map((n) => n.text ?? "")
-      .join("");
-  }
-  return typeof p?.text === "string" ? p.text : "";
+function shapeText(shape: Shape): string {
+  if (shape.type === "text") return (shape as TextShape).text ?? "";
+  return "";
 }
 
-export function useAutoAI(
-  editor: Editor | null,
-  enabled: boolean,
-  onSuggest: (s: PopupSuggestion) => void,
-): { processing: boolean } {
+function shapeSize(shape: Shape): { w: number; h: number } | null {
+  const s = shape as unknown as {
+    points?: unknown;
+    x2?: number;
+    y2?: number;
+    w?: number;
+    h?: number;
+    size?: number;
+  };
+  if (shape.type === "draw") {
+    const pts = s.points;
+    if (!Array.isArray(pts) || pts.length === 0) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const first = pts[0];
+    if (typeof first === "number") {
+      // flat [x0,y0,x1,y1,...] RELATIVE to x,y
+      for (let i = 0; i + 1 < pts.length; i += 2) {
+        const px = Number(pts[i]) || 0;
+        const py = Number(pts[i + 1]) || 0;
+        minX = Math.min(minX, px);
+        minY = Math.min(minY, py);
+        maxX = Math.max(maxX, px);
+        maxY = Math.max(maxY, py);
+      }
+    } else {
+      for (const raw of pts) {
+        if (raw && typeof raw === "object") {
+          const px = Number((raw as { x?: number }).x) || 0;
+          const py = Number((raw as { y?: number }).y) || 0;
+          minX = Math.min(minX, px);
+          minY = Math.min(minY, py);
+          maxX = Math.max(maxX, px);
+          maxY = Math.max(maxY, py);
+        }
+      }
+    }
+    if (!isFinite(minX) || !isFinite(maxX)) return null;
+    const size = s.size ?? 2;
+    return {
+      w: Math.max(1, maxX - minX + size),
+      h: Math.max(1, maxY - minY + size),
+    };
+  }
+  if (shape.type === "line" || shape.type === "arrow") {
+    return {
+      w: Math.max(1, Math.abs(s.x2 ?? 0)),
+      h: Math.max(1, Math.abs(s.y2 ?? 0)),
+    };
+  }
+  return {
+    w: Math.max(1, Math.abs(s.w ?? 0)),
+    h: Math.max(1, Math.abs(s.h ?? 0)),
+  };
+}
+
+export function useAutoAI(opts: {
+  store: BoardStore | null;
+  apiRef: MutableRefObject<BoardApi | null>;
+  enabled: boolean;
+  onSuggest: (s: PopupSuggestion) => void;
+}): { processing: boolean } {
+  const { store, apiRef, enabled, onSuggest } = opts;
   const [processing, setProcessing] = useState(false);
   const processedIds = useRef<Set<string> | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,46 +92,29 @@ export function useAutoAI(
   suggestRef.current = onSuggest;
 
   useEffect(() => {
-    if (!editor || !enabled) return;
+    if (!store || !enabled) return;
 
     if (!processedIds.current) {
-      processedIds.current = new Set(editor.getCurrentPageShapeIds());
+      processedIds.current = new Set(store.shapes().map((s) => s.id));
     }
     const processed = processedIds.current;
 
     const run = async () => {
-      if (!editor || inFlight.current || !processedIds.current) return;
+      if (!store || inFlight.current || !processedIds.current) return;
 
-      const newIds: TLShapeId[] = [];
-      for (const id of editor.getCurrentPageShapeIds()) {
-        if (processed.has(id)) continue;
-        const shape = editor.store.get(id);
-        if (
-          !shape ||
-          !isShape(shape) ||
-          shape.type === "image" ||
-          shape.type === "note"
-        )
-          continue;
-        const b = editor.getShapePageBounds(id);
-        if (!b || b.maxX - b.minX < MIN_SIZE || b.maxY - b.minY < MIN_SIZE)
-          continue;
+      const newIds: string[] = [];
+      for (const shape of store.shapes()) {
+        if (processed.has(shape.id)) continue;
+        const size = shapeSize(shape);
+        if (!size || (size.w < MIN_SIZE && size.h < MIN_SIZE)) continue;
         if (shape.type === "text" && !shapeText(shape).trim()) continue;
-        newIds.push(id);
+        newIds.push(shape.id);
       }
       if (newIds.length === 0) return;
 
       inFlight.current = true;
       setProcessing(true);
       try {
-        let hasBounds = false;
-        for (const id of newIds) {
-          if (editor.getShapePageBounds(id)) {
-            hasBounds = true;
-            break;
-          }
-        }
-        if (!hasBounds) return;
         const anchorShapeId = newIds[newIds.length - 1];
         const suggest = (data: PopupSuggestion["data"]) =>
           suggestRef.current({
@@ -87,12 +123,12 @@ export function useAutoAI(
             data,
           });
 
-        const remaining: TLShapeId[] = [];
+        const remaining: string[] = [];
 
         // FAST PATH (local, no API)
         for (const id of newIds) {
-          const shape = editor.store.get(id);
-          if (!shape || !isShape(shape) || shape.type !== "text") {
+          const shape = store.getShape(id);
+          if (!shape || shape.type !== "text") {
             remaining.push(id);
             continue;
           }
@@ -128,64 +164,66 @@ export function useAutoAI(
 
         // VISION PATH (background AI)
         if (remaining.length > 0 && !disabledOnce.current) {
-          let analysis: BoardAnalysis | null = null;
-          try {
-            const { url } = await editor.toImageDataUrl(remaining, {
-              format: "png",
-              scale: 1.5,
-            });
-            const res = await fetch("/api/ai/vision", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ image: url }),
-            });
-            if (res.status === 501) {
-              disabledOnce.current = true;
-              console.info("[auto-ai] vision API not configured — disabled for this session");
-            } else if (res.ok) {
-              const data = (await res.json()) as { analysis?: BoardAnalysis };
-              analysis = data.analysis ?? null;
+          const api = apiRef.current;
+          if (api) {
+            let analysis: BoardAnalysis | null = null;
+            try {
+              const img = await api.exportShapesPNG(remaining, 1.5);
+              if (img) {
+                const res = await fetch("/api/ai/vision", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ image: img.dataUrl }),
+                });
+                if (res.status === 501) {
+                  disabledOnce.current = true;
+                  console.info("[auto-ai] vision API not configured — disabled for this session");
+                } else if (res.ok) {
+                  const data = (await res.json()) as { analysis?: BoardAnalysis };
+                  analysis = data.analysis ?? null;
+                }
+              }
+            } catch {
+              analysis = null;
             }
-          } catch {
-            analysis = null;
-          }
 
-          if (analysis) {
-            const description = analysis.description ?? "";
-            if (analysis.expression) {
-              suggest({
-                kind: "graph",
-                title: analysis.title,
-                expression: analysis.expression,
-                description,
-              });
-            } else if (analysis.kind === "equation" || analysis.equation) {
-              suggest({
-                kind: "equation",
-                title: analysis.title,
-                equation: analysis.equation ?? analysis.latex,
-                description,
-              });
-            } else if (analysis.kind === "molecule" || analysis.molecule) {
-              suggest({
-                kind: "molecule",
-                title: analysis.title,
-                molecule: analysis.molecule ?? analysis.title,
-                description,
-              });
-            } else if (analysis.kind === "physics") {
-              suggest({
-                kind: "physics",
-                title: analysis.title,
-                params: analysis.params,
-                description,
-              });
-            } else {
-              suggest({
-                kind: "info",
-                title: analysis.title,
-                description: `${description}${analysis.latex ? " | " + analysis.latex : ""}`,
-              });
+            if (analysis) {
+              const description = analysis.description ?? "";
+              if (analysis.expression) {
+                suggest({
+                  kind: "graph",
+                  title: analysis.title,
+                  expression: analysis.expression,
+                  description,
+                });
+              } else if (analysis.kind === "equation" || analysis.equation) {
+                suggest({
+                  kind: "equation",
+                  title: analysis.title,
+                  equation: analysis.equation ?? analysis.latex,
+                  description,
+                });
+              } else if (analysis.kind === "molecule" || analysis.molecule) {
+                suggest({
+                  kind: "molecule",
+                  title: analysis.title,
+                  molecule: analysis.molecule ?? analysis.title,
+                  description,
+                });
+              } else if (analysis.kind === "physics") {
+                suggest({
+                  kind: "physics",
+                  title: analysis.title,
+                  params: analysis.params,
+                  description,
+                });
+              } else {
+                suggest({
+                  kind: "info",
+                  title: analysis.title,
+                  description: `${description}${analysis.latex ? " | " + analysis.latex : ""}`,
+                });
+              }
             }
           }
         }
@@ -206,13 +244,13 @@ export function useAutoAI(
       }, DEBOUNCE_MS);
     };
 
-    const unsub = editor.store.listen(schedule, { scope: "document", source: "user" });
+    const unsub = store.subscribe(schedule);
     return () => {
       unsub();
       if (timer.current) clearTimeout(timer.current);
       timer.current = null;
     };
-  }, [editor, enabled]);
+  }, [store, apiRef, enabled]);
 
   return { processing };
 }
