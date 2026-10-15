@@ -125,6 +125,7 @@ export default function Board({
   const [, forceRender] = useState(0);
   const [textEdit, setTextEdit] = useState<TextEdit | null>(null);
   const textEditRef = useRef<TextEdit | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const toolRef = useRef<Tool>("select");
   const colorRef = useRef(color);
   const widthRef = useRef(width);
@@ -312,6 +313,15 @@ export default function Board({
   useEffect(() => {
     textEditRef.current = textEdit;
   }, [textEdit]);
+
+  const textEditSeed = textEdit
+    ? (textEdit.id ?? "new") + ":" + textEdit.pageX + ":" + textEdit.pageY
+    : null;
+  useEffect(() => {
+    if (!textEditSeed) return;
+    const t = setTimeout(() => textareaRef.current?.focus(), 80);
+    return () => clearTimeout(t);
+  }, [textEditSeed]);
 
   const apiRef = useRef<BoardApi | null>(null);
   if (!apiRef.current) {
@@ -553,7 +563,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -570,7 +584,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -594,7 +612,11 @@ export default function Board({
                 erasing: new Set(),
                 resizeOrigin: { id: sel.id, x: b.x, y: b.y, w: b.w, h: b.h },
               };
-              canvas.setPointerCapture(e.pointerId);
+              try {
+                canvas.setPointerCapture(e.pointerId);
+              } catch {
+                /* synthetic pointer */
+              }
               return;
             }
           }
@@ -642,7 +664,11 @@ export default function Board({
             resizeOrigin: null,
           };
         }
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -659,7 +685,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         const id = hitAny(page.x, page.y);
         if (id) {
           dragRef.current.erasing.add(id);
@@ -692,7 +722,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -720,7 +754,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -748,7 +786,11 @@ export default function Board({
           erasing: new Set(),
           resizeOrigin: null,
         };
-        canvas.setPointerCapture(e.pointerId);
+        try {
+          canvas.setPointerCapture(e.pointerId);
+        } catch {
+          /* synthetic pointer */
+        }
         return;
       }
 
@@ -889,9 +931,12 @@ export default function Board({
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== e.pointerId) return;
-      dragRef.current = null;
-      if (drag.draft) commitDraft();
-      dirtyRef.current = true;
+      try {
+        if (drag.draft) commitDraft();
+      } finally {
+        dragRef.current = null;
+        dirtyRef.current = true;
+      }
     },
     [commitDraft]
   );
@@ -975,6 +1020,7 @@ export default function Board({
 
       {textEdit && textScreen && (
         <textarea
+          ref={textareaRef}
           autoFocus
           value={textEdit.value}
           onChange={(e) => {
@@ -982,7 +1028,6 @@ export default function Board({
             textEditRef.current = { ...textEdit, value: v };
             setTextEdit({ ...textEdit, value: v });
           }}
-          onBlur={commitTextEdit}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               e.stopPropagation();
